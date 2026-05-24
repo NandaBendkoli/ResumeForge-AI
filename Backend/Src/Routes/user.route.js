@@ -6,7 +6,8 @@ import {
     loginUser,
     updateUser,
     deleteUser,
-    logoutUser
+    logoutUser,
+    getUser
 } from "../Controller/user.controller.js";
 import { AuthMiddlware } from "../Middleware/AuthMiddleware.js";
 
@@ -22,6 +23,8 @@ router.post("/updateUser", updateUser);
 
 router.post("/deleteUser", deleteUser);
 
-router.post("/logoutUser",AuthMiddlware, logoutUser);
+router.post("/logoutUser", AuthMiddlware, logoutUser);
+
+router.post("/getUser", getUser);
 
 export default router;

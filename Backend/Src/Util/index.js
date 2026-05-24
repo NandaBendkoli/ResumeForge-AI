@@ -1,27 +1,61 @@
-import counterModel from "../Model/counter.model.js"
+import counterModel from "../Model/counter.model.js";
 
+const getNextSequence = async (
+    sequenceName,
+    startValue = 100000
+) => {
 
-const getNextSequence = async (sequenceName, startValue = 1000000) => {
+    try {
 
-    const update = await counterModel.findOneAndUpdate(
-        { counterId: sequenceName },
-        { $inc: { $seq: 1 } },
-        { new: true }
+        // find existing counter
+        let counter = await counterModel.findOne({
+            counterId: sequenceName
+        });
 
-    ).lean()
+        // create counter first time
+        if (!counter) {
 
-    // create new id 
-    if (!update) {
-        const newCounter = await counterModel({
-            counterId: sequenceName,
-            seq: startValue
-        }).save()
-        return newCounter.seq
+            counter = await counterModel.create({
+                counterId: sequenceName,
+
+                // first value
+                seq: startValue
+            });
+
+            return counter.seq;
+        }
+
+        // increment existing counter
+        counter = await counterModel.findOneAndUpdate(
+
+            {
+                counterId: sequenceName
+            },
+
+            {
+                $inc: {
+                    seq: 1
+                }
+            },
+
+            {
+                returnDocument: "after"
+            }
+
+        );
+
+        return counter.seq;
+
+    } catch (error) {
+
+        console.log(error);
+
+        throw new Error(
+            "Error generating sequence!"
+        );
+
     }
 
-    return update.seq
-
-}
-
+};
 
 export { getNextSequence };

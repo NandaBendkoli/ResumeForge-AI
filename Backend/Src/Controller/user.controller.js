@@ -91,6 +91,35 @@ export const createUser = async (req, res) => {
 
 };
 
+export const getUser = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await UserModel.findOne({ userId, isDeleted: false });
+        if (!user) {
+            return errorResponse(
+                res,
+                "User not found!",
+                404
+            );
+        }
+        return successResponse(
+            res,
+            "User found successfully!",
+            user
+        );
+
+    } catch (error) {
+        console.log(error);
+
+        return errorResponse(
+            res,
+            "Error occurred during login!",
+            500
+        );
+
+    }
+
+}
 
 export const loginUser = async (req, res) => {
 
@@ -141,39 +170,25 @@ export const loginUser = async (req, res) => {
 
         }
 
-        // =========================
-        // ACCESS TOKEN
-        // =========================
-
         const accessToken = jwt.sign(
             {
-                userId: user._id,
+                userId: user.userId,
                 name: user.name,
                 email: user.email,
                 gender: user.gender
             },
             process.env.SECRETE_KEY,
             {
-                expiresIn: "15m"
-            }
-        );
-        const refreshToken = jwt.sign(
-            {
-                userId: user._id
-            },
-            process.env.REFRESH_TOKEN_SECRET,
-            {
                 expiresIn: "7d"
             }
         );
-
         // save refresh token in DB
-        user.refreshToken = refreshToken;
+        user.accessToken = accessToken;
 
         await user.save();
 
         // store refresh token in cookie
-        res.cookie("refreshToken", refreshToken, {
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: false,
             sameSite: "lax",
@@ -206,51 +221,12 @@ export const loginUser = async (req, res) => {
 
 };
 
+
 export const logoutUser = async (req, res) => {
 
     try {
 
-        const { userId } = req.body;
-
-        if (!userId) {
-
-            return errorResponse(
-                res,
-                "UserId is required!",
-                400
-            );
-
-        }
-
-        // find user
-        const user = await UserModel.findOne({
-            userId,
-            isDeleted: false
-        });
-
-        // check user
-        if (!user) {
-
-            return errorResponse(
-                res,
-                "User not found!",
-                404
-            );
-
-        }
-
-        // get token
-        const token = user.token;
-
-        // save token in blacklist
-        await blackListModel.create({
-            token
-        });
-
-        // remove token from user
-        user.token = null;
-
-        await user.save();
+        res.clearCookie("accessToken");
 
         return successResponse(
             res,
@@ -268,18 +244,17 @@ export const logoutUser = async (req, res) => {
         );
 
     }
-
 };
 
 export const getAllUser = async (req, res) => {
 
     try {
 
-        const users = await UserModel.find({
+        const user = await UserModel.find({
             isDeleted: false
         }).select("-password");
 
-        if (!users.length) {
+        if (!user.length) {
 
             return errorResponse(
                 res,
@@ -292,7 +267,7 @@ export const getAllUser = async (req, res) => {
         return successResponse(
             res,
             "Users fetched successfully!",
-            users
+            user
         );
 
     } catch (error) {
