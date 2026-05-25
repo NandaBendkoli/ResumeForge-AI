@@ -2,7 +2,10 @@ import axios from "axios";
 
 
 const api = axios.create({
-    baseURL: "http://localhost:8070/ResumeForge-AI/web/v1",
+    // baseURL: "http://localhost:8070/ResumeForge-AI/web/v1",
+    baseURL: import.meta.env.VITE_API_URL +
+        "/ResumeForge-AI/web/v1",
+
     withCredentials: true,
 });
 
