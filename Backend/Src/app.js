@@ -13,7 +13,7 @@ app.use(cookieParser());
 app.use(cors({
     origin: [
         "http://localhost:5173",
-        // "vercel"
+        "https://resume-forge-ai-ndwm.vercel.app"
     ],
 
     credentials: true
